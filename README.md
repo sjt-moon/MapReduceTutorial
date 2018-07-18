@@ -31,6 +31,8 @@ Using multiple mappers together could **avoid lots of dist IO**.
 
 This *ChainMR.java* only adds mappers before the reducer.
 
+*I got reference from [Hadoop ChainMapper](https://stackoverflow.com/questions/12926474/hadoop-chainmapper-chainreducer).*
+
 ## ChainMR2
 How could we add multiple mappers and reducers? As far as I searched on the Internet, there is no such utility achieving this. The only solution is to store the intermediate files on local disks and read by the next job. I.e.
 
