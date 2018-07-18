@@ -21,21 +21,30 @@ I asked the question [Why there is no output for hadoop word count histogram pro
 ](https://stackoverflow.com/questions/51373965/why-there-is-no-output-for-hadoop-word-count-histogram-program) on StackOverflow.
 
 ## ChainMR
-To implement paradiams like ``maps -> reducer -> other maps``, Hadoop provides with a interface called ``ChainMapper`` and ``ChainReducer``. Workflow is as follows:
+To implement paradiams like ``maps -> reducer -> other maps``, Hadoop provides with an interface called ``ChainMapper`` and ``ChainReducer``. Workflow is as follows:
 
 * ``ChainMapper`` adds maps
 * only ``1 reducer`` is allowed, added by ``ChainReducer``
-* we couls also add a few mappers after that reducer via ``ChainReducer``
+* we could also add a few mappers after that reducer via ``ChainReducer``
 
 Using multiple mappers together could **avoid lots of dist IO**.
 
 This *ChainMR.java* only adds mappers before the reducer.
 
 ## ChainMR2
-How could we add multiple mappers and reducers? As far as I searched on the Internet, there is no such utility achieving this. The only solution is that store the intermediate files on local disks and read by the next job. I.e.
+How could we add multiple mappers and reducers? As far as I searched on the Internet, there is no such utility achieving this. The only solution is to store the intermediate files on local disks and read by the next job. I.e.
 
 > ChainMR (map1 ... mapK reducer1 mapK+1 ... ) -> local disk -> ChainMR'
 
-# Possible Exceptions
-## IOException wrong value class: IntWritable is not Text
+## Possible Exceptions
+### IOException wrong value class: IntWritable is not Text
 Mappers' outputs are supposed to be the same of reducer by default, if you only set ``setOutputKeyClass`` and ``setOutputValueClass``. In that scenario, we should also set ``setMapOutputKeyClass`` and ``setMapOutputValueClass``.
+
+### Connection refused, cannot start namenode
+It's possibly because of the inconsistency of namenode and datanode IDs when you format HDFS for multiple times. Those IDs on datanode might be out-of-date compared to those on namenode. While it might be a solution to copy those IDs to datanodes (``/tmp/hadoop-username/dfs/name/current/VERSION``), another UGLY solution is [DELETE ALL](https://stackoverflow.com/questions/15630460/connection-refused-error-for-namenode-hdfs-hadoop-issue):
+
+> ./bin/stop-all.sh
+>
+> rm -rf /tmp/hadoop*
+>
+> ./bin/hadoop namenode -format
